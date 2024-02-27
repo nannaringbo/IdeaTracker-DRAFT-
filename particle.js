@@ -1,4 +1,4 @@
-let particles = [];
+let stars = [];
 let today = new Date();
 let dates = []; // Array to store dates
 let sampleZNumbers = [];
@@ -12,7 +12,9 @@ function preload() {
     let today = new Date(); // Get today's date
     sampleZNumbers = dates.map((date) => {
       let difference = today - date;
-      return Math.floor(difference / (1000 * 60 * 60 * 24)); // Return the calculated z number
+      let calZ = Math.floor(difference / (1000 * 60 * 60 * 24)); // Return the calculated z number
+      let zNumber = map(calZ, 0, 3500, 0, 100);
+      return zNumber;
     });
 
     console.log(sampleZNumbers); // Log the sample z numbers array to the console
@@ -23,76 +25,98 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   for (let s = 0; s < sampleZNumbers.length; s++) {
     console.log(sampleZNumbers[s]);
-    let p = new Particle(sampleZNumbers[s]);
+    let p = new Star(sampleZNumbers[s]);
     console.log(p);
     console.log(p.radius);
-    particles.push(p);
+    stars.push(p);
   }
 }
 
 function draw() {
   background(0);
 
-  for (let i = 0; i < particles.length; i++) {
-    particles[i].show();
-    particles[i].update();
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].show();
+    stars[i].update();
   }
 }
 
-class Particle {
+class Star {
   constructor(z) {
     this.pos = createVector(
       random(0, windowWidth - 20),
       random(0, windowHeight - 20),
       z
     );
-    this.radius = map(z, 0, 3500, 7, 0.5); // Adjust radius based on depth
-    this.alpha = random(50, 255);
-    this.fadeAmount = random(1, 15);
+    this.radius = map(z, 0, 100, 10, 0.5); // calculating radius based on the z index. The bigger the z index, the smaller the radius
+    this.alpha = random(31, 250);
+    this.fadeAmount = random(0.1, 7); //the amount that alpha is de/increased for every update
     this.rotationSpeed = random(-0.2, 0.2);
-    this.angle = random(-90, 90); // Initial angle for rotation
-    this.speed = random(-0.12, 0.12); // Adjusted speed
-    //this.sensorousParam = This is what we track (and more if we want)
-    this.from = color(255, this.alpha); // Start color (white with alpha)
-    this.to = color(random(50, 80), this.alpha); // End color (fully transparent white)
+    this.angle = random(-90, 90); // Angle for rotation
+    this.speed = random(-0.12, 0.12);
+    this.color = color(
+      random([255, 0]),
+      random([255, 0]),
+      random([255, 0]),
+      this.alpha
+    ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
+    this.makeClickable();
   }
 
-  finished() {
-    return this.alpha;
+  makeClickable() {
+    addEventListener("click", (e) => {
+      this.onClick();
+    });
   }
-  update() {
-    //this.angle += this.rotationSpeed;
 
-    // Calculate new position based on angle and speed
+  onClick() {
+    window.alert("This is your star!");
+    console.log("you clicked a star with the radius: " + this.radius);
+  }
+
+  twinkle() {
+    // Update alpha and fade
+    this.alpha -= this.fadeAmount;
+    if (this.alpha < 31 || this.alpha > 250) {
+      this.fadeAmount *= -1;
+    }
+  }
+
+  moveTo() {
+    this.pos.z = 1;
+  }
+
+  movement() {
+    // Calculate position based on angle and speed
     let xoffset = cos(this.angle) * this.speed;
     let yoffset = sin(this.angle) * this.speed;
     this.pos.x = (this.pos.x + xoffset + windowWidth) % windowWidth;
     this.pos.y = (this.pos.y + yoffset + windowHeight) % windowHeight;
+  }
 
-    // Update alpha and fade
-    this.alpha -= this.fadeAmount;
-    if (this.alpha < 30 || this.alpha > 254) {
-      this.fadeAmount *= -0.8;
-    }
+  // finished() {
+  //   return this.alpha;
+  // }
+  update() {
+    this.movement();
+    this.twinkle();
   }
 
   show() {
     noStroke();
 
-    // Define gradient colors
-
-    // Draw gradient ellipse
     for (let r = 0; r <= this.radius; r++) {
       // Calculate alpha value based on distance from center
       let alpha = map(r, 0, this.radius, this.alpha, 0);
-      let colorAtRadius = lerpColor(this.from, this.to, r / this.radius); // Interpolate between colors
+      let colorAtRadius = lerpColor(this.color, this.color, 0.5); // Interpolate between colors
+
       fill(
         red(colorAtRadius),
         green(colorAtRadius),
         blue(colorAtRadius),
         alpha
       );
-      ellipse(this.pos.x, this.pos.y, r * 2); // Draw ellipse with varying radius
+      circle(this.pos.x, this.pos.y, r * 2);
     }
   }
 }
