@@ -5,7 +5,7 @@ let sampleZNumbers = [];
 
 function preload() {
   // Use preload() function to load data before setup() is called
-  loadStrings("star_data.txt", function (data) {
+  loadStrings("TESTstar_data.txt", function (data) {
     dates = data.map((date) => new Date(date.trim()));
     console.log(dates); // Log the dates array to the console
     // Calculate sample z numbers here, inside the callback
@@ -48,7 +48,7 @@ class Star {
       random(0, windowHeight - 20),
       z
     );
-    this.radius = map(z, 0, 100, 10, 0.5); // calculating radius based on the z index. The bigger the z index, the smaller the radius
+    this.radius = map(z, 0, 100, 20, 10); // calculating radius based on the z index. The bigger the z index, the smaller the radius
     this.alpha = random(31, 250);
     this.fadeAmount = random(0.1, 7); //the amount that alpha is de/increased for every update
     this.rotationSpeed = random(-0.2, 0.2);
@@ -60,18 +60,18 @@ class Star {
       random([255, 0]),
       this.alpha
     ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
-    this.makeClickable();
   }
 
-  makeClickable() {
-    addEventListener("click", (e) => {
-      this.onClick();
-    });
+  isClicked() {
+    return dist(mouseX, mouseY, this.pos.x, this.pos.y) < this.radius;
   }
 
-  onClick() {
-    window.alert("This is your star!");
-    console.log("you clicked a star with the radius: " + this.radius);
+  handleClick() {
+    if (this.isClicked()) {
+      // Create and show the modal
+      let modal = new Modal(this);
+      modal.show();
+    }
   }
 
   twinkle() {
@@ -94,9 +94,6 @@ class Star {
     this.pos.y = (this.pos.y + yoffset + windowHeight) % windowHeight;
   }
 
-  // finished() {
-  //   return this.alpha;
-  // }
   update() {
     this.movement();
     this.twinkle();
@@ -118,5 +115,30 @@ class Star {
       );
       circle(this.pos.x, this.pos.y, r * 2);
     }
+  }
+}
+
+function mouseClicked() {
+  // Loop through all stars and check if any are clicked
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].handleClick();
+  }
+}
+
+class Modal {
+  constructor(star) {
+    this.belong = star.pos.z;
+    this.starRadius = star.radius;
+  }
+
+  show() {
+    noStroke();
+    circle(50, 75, 20);
+    fill(color(255, 167, 9)); // Example fill color (red)
+    console.log("You created a modal with the radius" + this.starRadius);
+  }
+
+  hide() {
+    // You can add logic here to hide the modal
   }
 }
