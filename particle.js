@@ -54,12 +54,7 @@ class Star {
     this.rotationSpeed = random(-0.2, 0.2);
     this.angle = random(-90, 90); // Angle for rotation
     this.speed = random(-0.12, 0.12);
-    this.color = color(
-      random([255, 0]),
-      random([255, 0]),
-      random([255, 10]),
-      this.alpha
-    ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
+    this.color = color(random([255, 0]), random([255, 0]), 255, this.alpha); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
   }
 
   isClicked() {
@@ -133,7 +128,7 @@ class Modal {
 
   show() {
     noStroke();
-    circle(50, 75, 20);
+    square(50, 75, 20);
     fill(color(255, 167, 9)); // Example fill color (red)
     console.log(
       "You created a modal with the radius" +
