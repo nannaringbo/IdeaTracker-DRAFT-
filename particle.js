@@ -135,7 +135,12 @@ class Modal {
     noStroke();
     circle(50, 75, 20);
     fill(color(255, 167, 9)); // Example fill color (red)
-    console.log("You created a modal with the radius" + this.starRadius);
+    console.log(
+      "You created a modal with the radius" +
+        this.starRadius +
+        " and " +
+        this.belong
+    );
   }
 
   hide() {
