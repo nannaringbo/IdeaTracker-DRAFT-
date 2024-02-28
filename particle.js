@@ -48,7 +48,7 @@ class Star {
       random(0, windowHeight - 20),
       z
     );
-    this.radius = map(z, 0, 100, 20, 10); // calculating radius based on the z index. The bigger the z index, the smaller the radius
+    this.radius = map(z, 0, 100, 10, 1); // calculating radius based on the z index. The bigger the z index, the smaller the radius
     this.alpha = random(31, 250);
     this.fadeAmount = random(0.1, 7); //the amount that alpha is de/increased for every update
     this.rotationSpeed = random(-0.2, 0.2);
@@ -57,7 +57,7 @@ class Star {
     this.color = color(
       random([255, 0]),
       random([255, 0]),
-      random([255, 0]),
+      random([255, 10]),
       this.alpha
     ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
   }
