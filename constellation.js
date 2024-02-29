@@ -9,7 +9,7 @@ let nStars = 400;
 
 function preload() {
   // Use preload() function to load data before setup() is called
-  loadStrings("star_data.txt", function (data) {
+  loadStrings("TESTstar_data.txt", function (data) {
     dates = data.map((date) => new Date(date.trim()));
     //console.log(dates); // Log the dates array to the console
     // Calculate sample z numbers here, inside the callback
@@ -29,6 +29,9 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   //nStars = sampleZNumbers.length
   fillArray(nStars);
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].makeConstellation(stars);
+  }
 }
 
 function fillArray(n) {
@@ -60,9 +63,9 @@ function draw() {
     stars[i].show();
     stars[i].update();
     //stars[i].twinkel();
-    stars[i].mouseOver();
+    // stars[i].mouseOver();
 
-    chase({ x: mouseX, y: mouseY }, stars[i], 1);
+    //chase({ x: mouseX, y: mouseY }, stars[i], 1);
     //if(stars[i].isInside){
     //stars[i].moveTo(mouseX,mouseY)
     //}
@@ -106,7 +109,30 @@ class Star {
     this.rotationSpeed = random(-0.0, 0.02);
     this.angle = random(-90, 90); // angle for rotation
     this.speed = random(-0.12, 0.12);
-    this.color = color(random([255, 0]), random([255, 0]), 255, this.alpha); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
+    this.color = color(
+      random([
+        [0, 0, 255],
+        [0, 255, 0],
+        [255, 0, 0],
+        [255, 255, 255],
+        [255, 0, 255],
+      ])
+    ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
+
+    this.constellation = [];
+  }
+
+  makeConstellation(stars) {
+    for (let i = 0; i < stars.length; i++) {
+      if (
+        stars[i] !== this &&
+        stars[i].color.toString() === this.color.toString()
+      ) {
+        this.constellation.push(stars[i]);
+        console.log("We belong together!");
+        console.log(this.constellation);
+      }
+    }
   }
 
   setRadius(r) {
@@ -129,25 +155,24 @@ class Star {
     }
   }
 
-  deflate(p) {
-    if (this.radius > 30) {
-      this.radius--;
-      //this.pos.x++
-      //this.pos.x++
-      //this.w-=2
-      //this.h-=2
+  deflate() {
+    if (this.isOutside) {
+      this.radius = -1;
     }
   }
 
-  mouseOver() {
-    //console.log(this.radius, dist(mouseX, mouseY, this.pos.x, this.pos.y));
-    if (this.isInside()) {
-      this.engorge();
-    } else if (!this.isInside()) {
-      this.deflate();
-    }
-  }
+  // mouseOver() {
+  //   //console.log(this.radius, dist(mouseX, mouseY, this.pos.x, this.pos.y));
+  //   if (this.isInside()) {
+  //     this.engorge();
+  //   } else if (!this.isInside()) {
+  //     this.deflate();
+  //   }
+  // }
 
+  isOutside() {
+    return dist(mouseX, mouseY, this.pos.x, this.pos.y) > this.radius;
+  }
   isInside() {
     //let isLeftOf=p.mouseX <= this.xPos;
     //let isRightOf=p.mouseX >= (this.xPos+this.w);
@@ -208,8 +233,8 @@ class Star {
   movement() {
     let xoffset = cos(this.angle) * this.speed;
     let yoffset = sin(this.angle) * this.speed;
-    this.pos.x = (this.pos.x + xoffset + w) % w;
-    this.pos.y = (this.pos.y + yoffset + h) % h;
+    this.pos.x = (this.pos.x + xoffset + windowWidth) % windowWidth;
+    this.pos.y = (this.pos.y + yoffset + windowHeight) % windowHeight;
   }
 
   twinkle() {
@@ -249,6 +274,22 @@ class Star {
 function mouseClicked() {
   for (let i = 0; i < stars.length; i++) {
     stars[i].handleClick();
+  }
+}
+
+function mouseMoved() {
+  for (let i = 0; i < stars.length; i++) {
+    if (stars[i].isInside()) {
+      stars[i].engorge();
+      for (let j = 0; j < stars[i].constellation.length; j++) {
+        stars[i].constellation[j].engorge();
+      }
+    } else if (stars[i].isOutside() && stars[i].radius > 10) {
+      stars[i].deflate();
+      for (let j = 0; j < stars[i].constellation.length; j++) {
+        stars[i].constellation[j].deflate();
+      }
+    }
   }
 }
 
