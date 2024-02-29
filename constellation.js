@@ -9,7 +9,7 @@ let nStars = 400;
 
 function preload() {
   // Use preload() function to load data before setup() is called
-  loadStrings("TESTstar_data.txt", function (data) {
+  loadStrings("star_data.txt", function (data) {
     dates = data.map((date) => new Date(date.trim()));
     //console.log(dates); // Log the dates array to the console
     // Calculate sample z numbers here, inside the callback
@@ -26,7 +26,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(w, h);
+  createCanvas(windowWidth, windowHeight);
   //nStars = sampleZNumbers.length
   fillArray(nStars);
 }
@@ -121,6 +121,7 @@ class Star {
   engorge(p) {
     if (this.radius < 200) {
       this.radius++;
+      this.pos.z = 0;
       //this.pos.x--
       //this.pos.y--
       //this.w+=2
