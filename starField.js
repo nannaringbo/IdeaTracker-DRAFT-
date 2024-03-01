@@ -6,10 +6,11 @@ let w = 1200;
 let h = 1200;
 let iter = 0;
 let nStars = 400;
+let modal = null;
 
 function preload() {
   // Use preload() function to load data before setup() is called
-  loadStrings("star_data.txt", function (data) {
+  loadStrings("TESTstar_data.txt", function (data) {
     dates = data.map((date) => new Date(date.trim()));
     //console.log(dates); // Log the dates array to the console
     // Calculate sample z numbers here, inside the callback
@@ -26,18 +27,18 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(w, h);
   //nStars = sampleZNumbers.length
-  fillArray(nStars);
+  fillArray();
 }
 
-function fillArray(n) {
-  for (let s = 0; s < n; s++) {
+function fillArray() {
+  for (let s = 0; s < sampleZNumbers.length; s++) {
     //console.log(sampleZNumbers[s]);
-    let star = new Star(sampleZNumbers[s]);
-    //console.log(star);
-    //console.log(star.radius);
-    stars.push(star);
+    let p = new Star(sampleZNumbers[s]);
+    //console.log(p);
+    //console.log(p.radius);
+    stars.push(p);
   }
 }
 
@@ -60,7 +61,11 @@ function draw() {
     stars[i].show();
     stars[i].update();
     //stars[i].twinkel();
-    stars[i].mouseOver();
+    stars[i].checkMouseOver();
+    if (modal) {
+      modal.show();
+    }
+    //stars[i].mouseOver();
 
     chase({ x: mouseX, y: mouseY }, stars[i], 1);
     //if(stars[i].isInside){
@@ -107,6 +112,7 @@ class Star {
     this.angle = random(-90, 90); // angle for rotation
     this.speed = random(-0.12, 0.12);
     this.color = color(random([255, 0]), random([255, 0]), 255, this.alpha); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
+    this.isClicked = false;
   }
 
   setRadius(r) {
@@ -139,6 +145,10 @@ class Star {
     }
   }
 
+  clickMouseOver() {
+    let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
+    return d < this.radius;
+  }
   mouseOver() {
     //console.log(this.radius, dist(mouseX, mouseY, this.pos.x, this.pos.y));
     if (this.isInside()) {
@@ -192,16 +202,23 @@ class Star {
     pVelocity = pVelocity / (stars.length - 1);
     return (pVelocity - G.velocity) / chgVelocity;
   }
-
-  isClicked() {
-    return dist(mouseX, mouseY, this.pos.x, this.pos.y) < this.radius;
+  checkMouseOver() {
+    if (this.mouseOver()) {
+      this.engorge();
+    } else {
+      this.deflate();
+    }
   }
 
   handleClick() {
-    if (this.isClicked()) {
+    if (this.clickMouseOver()) {
+      this.isClicked = true;
       // Create and show the modal
-      let modal = new Modal(this);
-      modal.show();
+      modal = new Modal(this);
+      console.log("a modal was created!");
+      modal.toggle();
+    } else {
+      this.isClicked;
     }
   }
 
@@ -246,32 +263,107 @@ class Star {
 }
 
 // Loop through all stars and check if any are clicked
+
 function mouseClicked() {
+  let starClicked = false;
   for (let i = 0; i < stars.length; i++) {
-    stars[i].handleClick();
+    if (stars[i].clickMouseOver()) {
+      stars[i].handleClick();
+      starClicked = true;
+    }
+  }
+  // If a star is not clicked, hide the currently active modal
+  if (!starClicked && modal) {
+    modal.hide();
+    modal = null;
   }
 }
 
+//Modal (right now it is just a placeholder) for the pop-up with description/details about star
 //Modal (right now it is just a placeholder) for the pop-up with description/details about star
 class Modal {
   constructor(star) {
     this.belong = star.pos.z;
     this.starRadius = star.radius;
+    this.isVisible = false;
+    this.title = "Star Details";
+    this.description =
+      "This is a star with radius " +
+      this.starRadius +
+      " and z-position " +
+      this.belong;
+    this.bulletPoints = ["Point 1", "Point 2", "Point 3"]; // Replace with actual properties
+
+    // Define the size and position of the modal
+    this.width = 800;
+    this.height = 500;
+    this.x = (windowWidth - this.width) / 2;
+    this.y = (windowHeight - this.height) / 2;
+
+    // Define the size and position of the close button
+    this.closeButtonSize = 20;
+    this.closeButtonText = "X";
+    this.closeButtonX = this.x + this.width - this.closeButtonSize;
+    this.closeButtonY = this.y;
+    this.color = star.color;
   }
 
   show() {
-    noStroke();
-    square(50, 75, 20);
-    fill(color(255, 167, 9)); // Example fill color (red)
-    console.log(
-      "You created a modal with the radius" +
-        this.starRadius +
-        " and " +
-        this.belong
-    );
+    if (this.isVisible) {
+      noStroke();
+      fill(color(this.color)); // Background color
+
+      // Draw the modal
+      rect(this.x, this.y, this.width, this.height);
+
+      // Draw the title
+      fill(color(0, 0, 0)); // Text color
+      text(this.title, this.x + 10, this.y + 20);
+
+      // Draw the description
+      text(this.description, this.x + 10, this.y + 40);
+
+      // Draw the bullet points
+      for (let i = 0; i < this.bulletPoints.length; i++) {
+        text("- " + this.bulletPoints[i], this.x + 10, this.y + 70 + i * 20);
+      }
+      let iconSize = 50;
+      let iconMargin = 10;
+      let iconY = this.y + 100;
+      for (let i = 0; i < 4; i++) {
+        let iconX = this.x + 10 + i * (iconSize + iconMargin);
+        noFill();
+        stroke(0);
+        rect(iconX, iconY, iconSize, iconSize);
+      }
+
+      fill(color(255, 0, 0)); // Close button color
+      rect(
+        this.closeButtonX,
+        this.closeButtonY,
+        this.closeButtonSize,
+        this.closeButtonSize
+      );
+    }
   }
 
   hide() {
-    // You can add logic here to hide the modal
+    this.isVisible = false;
+  }
+
+  toggle() {
+    this.isVisible = !this.isVisible;
+  }
+
+  clicked(x, y) {
+    // Check if the close button was clicked
+    if (
+      x > this.closeButtonX &&
+      x < this.closeButtonX + this.closeButtonSize &&
+      y > this.closeButtonY &&
+      y < this.closeButtonY + this.closeButtonSize
+    ) {
+      this.hide();
+    }
   }
 }
