@@ -2,10 +2,11 @@ let stars = [];
 let today = new Date();
 let dates = []; // Array to store dates
 let sampleZNumbers = [];
-let w = 1200;
-let h = 1200;
-let iter = 0;
+// let w = 1200;
+// let h = 1200;
+// let iter = 0;
 let nStars = 400;
+let modal = null;
 
 function preload() {
   // Use preload() function to load data before setup() is called
@@ -28,33 +29,34 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   //nStars = sampleZNumbers.length
-  fillArray(nStars);
+  fillArray();
+  console.log(stars);
   for (let i = 0; i < stars.length; i++) {
     stars[i].makeConstellation(stars);
   }
 }
 
-function fillArray(n) {
-  for (let s = 0; s < n; s++) {
+function fillArray() {
+  for (let s = 0; s < sampleZNumbers.length; s++) {
     //console.log(sampleZNumbers[s]);
-    let star = new Star(sampleZNumbers[s]);
-    //console.log(star);
-    //console.log(star.radius);
-    stars.push(star);
+    let p = new Star(sampleZNumbers[s]);
+    //console.log(p);
+    //console.log(p.radius);
+    stars.push(p);
   }
 }
 
-function perceivedCenter(stars) {
-  centerSumX = 0;
-  centerSumY = 0;
-  for (let i = 0; i < stars.length; i++) {
-    centerSumX += stars[i].pos.x;
-    centerSumY += stars[i].pos.y;
-  }
-  centerAvgX = centerSumX / stars.length;
-  centerAvgY = centerSumY / stars.length;
-  return createVector(centerAvgX, centerAvgY);
-}
+// function perceivedCenter(stars) {
+//   centerSumX = 0;
+//   centerSumY = 0;
+//   for (let i = 0; i < stars.length; i++) {
+//     centerSumX += stars[i].pos.x;
+//     centerSumY += stars[i].pos.y;
+//   }
+//   centerAvgX = centerSumX / stars.length;
+//   centerAvgY = centerSumY / stars.length;
+//   return createVector(centerAvgX, centerAvgY);
+// }
 
 function draw() {
   background(0);
@@ -62,6 +64,10 @@ function draw() {
   for (let i = 0; i < stars.length; i++) {
     stars[i].show();
     stars[i].update();
+    stars[i].checkMouseOver();
+    if (modal) {
+      modal.show();
+    }
     //stars[i].twinkel();
     // stars[i].mouseOver();
 
@@ -71,43 +77,48 @@ function draw() {
     //}
   }
 
-  if (iter > 30) {
-    iter = 0;
-  }
-  iter++;
-  zoom(iter);
+  // if (iter > 30) {
+  //   iter = 0;
+  // }
+  // iter++;
+  // zoom(iter);
 }
 
-function zoom(i) {
-  stars[0].setRadius(i);
-}
+// function zoom(i) {
+//   stars[0].setRadius(i);
+// }
 
-function chase(mouse, cat, speed) {
-  mouse.x = mouseX;
-  mouse.y = mouseX;
-  let rX = mouseX - cat.pos.x;
-  let rY = mouseY - cat.pos.y;
+// function chase(mouse, cat, speed) {
+//   mouse.x = mouseX;
+//   mouse.y = mouseX;
+//   let rX = mouseX - cat.pos.x;
+//   let rY = mouseY - cat.pos.y;
 
-  //step 2
-  let rlen = sqrt(rX ** 2 + rY ** 2);
+//   //step 2
+//   let rlen = sqrt(rX ** 2 + rY ** 2);
 
-  //step 3
-  let uX = (1 / rlen) * rX;
-  let uY = (1 / rlen) * rY;
+//   //step 3
+//   let uX = (1 / rlen) * rX;
+//   let uY = (1 / rlen) * rY;
 
-  //step 4
-  cat.pos.x += speed * uX;
-  cat.pos.y += speed * uY;
-}
+//   //step 4
+//   cat.pos.x += speed * uX;
+//   cat.pos.y += speed * uY;
+// }
 
 class Star {
   constructor(z) {
-    this.pos = createVector(random(0, w - 20), random(0, h - 20), z);
-    this.radius = map(z, 0, 100, 10, 1); // Adjust radius based on depth
-    this.alpha = random(50, 255);
-    this.fadeAmount = random(1, 15);
-    this.rotationSpeed = random(-0.0, 0.02);
-    this.angle = random(-90, 90); // angle for rotation
+    this.ogZNumber = z;
+    this.pos = createVector(
+      random(0, windowWidth - 20),
+      random(0, windowHeight - 20),
+      z
+    );
+    this.radius = map(z, 0, 100, 10, 1); // calculating radius based on the z index. The bigger the z index, the smaller the radius
+    this.alpha = random(31, 250);
+    this.fadeAmount = random(0.1, 7); //the amount that alpha is de/increased for every update
+    this.rotationSpeed = random(-0.2, 0.2);
+    this.angle = random(-90, 90); // Angle for rotation
     this.speed = random(-0.12, 0.12);
     this.color = color(
       random([
@@ -118,8 +129,9 @@ class Star {
         [255, 0, 255],
       ])
     ); //Generates a random color from the two RGB values 255 and 0. This leaves us with the following 8 possible colors: RGB(0, 0, 0)Black, (0, 0, 255)Blue, (0, 255, 0)Green, (0, 255, 255)Cyan, (255, 0, 0)Red, (255, 0, 255)Magenta, (255, 255, 0)Yellow, (255, 255, 255)White.
-
     this.constellation = [];
+    this.isClicked = false;
+    this.orbitRadius = random(90, 100);
   }
 
   makeConstellation(stars) {
@@ -130,8 +142,8 @@ class Star {
       ) {
         this.constellation.push(stars[i]);
         console.log("We belong together!");
-        console.log(this.constellation);
       }
+      console.log(this.constellation);
     }
   }
 
@@ -144,89 +156,126 @@ class Star {
     this.pos.y = y;
   }
 
-  engorge(p) {
-    if (this.radius < 200) {
+  mouseOver() {
+    let d = dist(mouseX, mouseY, this.pos.x, this.pos.y);
+    return d < this.radius;
+  }
+  engorge() {
+    if (this.mouseOver() && this.radius < 20) {
       this.radius++;
       this.pos.z = 0;
-      //this.pos.x--
-      //this.pos.y--
-      //this.w+=2
-      //this.h+=2
+    }
+    for (let i = 0; i < this.constellation.length; i++) {
+      // Update the angle for the current star
+      this.constellation[i].angle += 0.001; // Adjust the speed as needed
+
+      // Calculate the target position of the current star in its orbit
+      let x = this.pos.x + this.orbitRadius * cos(this.constellation[i].angle);
+      let y = this.pos.y + this.orbitRadius * sin(this.constellation[i].angle);
+      let target = createVector(x, y);
+
+      // Use the lerp function to move the current star towards the target position
+      this.constellation[i].pos = p5.Vector.lerp(
+        this.constellation[i].pos,
+        target,
+        0.03
+      ); // Adjust the lerp factor as needed
+
+      this.constellation[i].radius = this.radius;
+      this.constellation[i].pos.z = this.pos.z;
+      console.log(this.constellation[i].pos.z);
     }
   }
-
+  // Deflate the star when mouse is not over
   deflate() {
-    if (this.isOutside) {
-      this.radius = -1;
+    if (!this.mouseOver()) {
+      this.radius = map(this.ogZNumber, 0, 100, 10, 1);
+      this.pos.z = this.ogZNumber;
+
+      // Generate a random target position for each star only if they don't already have one
+      for (let i = 0; i < this.constellation.length; i++) {
+        if (!this.constellation[i].target) {
+          let x = random(width);
+          let y = random(height);
+          this.constellation[i].target = createVector(x, y);
+        }
+      }
+    }
+    for (let i = 0; i < this.constellation.length; i++) {
+      // Use the lerp function to move the current star towards the target position
+      this.constellation[i].pos = p5.Vector.lerp(
+        this.constellation[i].pos,
+        this.constellation[i].target,
+        0.05
+      ); // Adjust the lerp factor as needed
     }
   }
 
-  // mouseOver() {
-  //   //console.log(this.radius, dist(mouseX, mouseY, this.pos.x, this.pos.y));
-  //   if (this.isInside()) {
-  //     this.engorge();
-  //   } else if (!this.isInside()) {
-  //     this.deflate();
-  //   }
+  checkMouseOver() {
+    if (this.mouseOver()) {
+      this.engorge();
+    } else {
+      this.deflate();
+    }
+  }
+
+  // isOutside() {
+  //   return dist(mouseX, mouseY, this.pos.x, this.pos.y) > this.radius;
+  // }
+  // isInside() {
+  //   //let isLeftOf=p.mouseX <= this.xPos;
+  //   //let isRightOf=p.mouseX >= (this.xPos+this.w);
+  //   //let isBeneath=p.mouseY >= (this.yPos+this.h);
+  //   //let isAbove=p.mouseY <= this.yPos;
+  //   //return !isLeftOf && !isRightOf && !isBeneath && !isAbove;
+  //   return dist(mouseX, mouseY, this.pos.x, this.pos.y) < this.radius;
   // }
 
-  isOutside() {
-    return dist(mouseX, mouseY, this.pos.x, this.pos.y) > this.radius;
-  }
-  isInside() {
-    //let isLeftOf=p.mouseX <= this.xPos;
-    //let isRightOf=p.mouseX >= (this.xPos+this.w);
-    //let isBeneath=p.mouseY >= (this.yPos+this.h);
-    //let isAbove=p.mouseY <= this.yPos;
-    //return !isLeftOf && !isRightOf && !isBeneath && !isAbove;
-    return dist(mouseX, mouseY, this.pos.x, this.pos.y) < this.radius;
-  }
+  // cohesion(stars) {
+  //   let pCenter;
+  //   for (let i = 0; i < stars.length; i++) {
+  //     if (this != stars[i]) {
+  //       pCenter += createVector(stars[i].pos.x, stars[i].pos.y);
+  //     }
+  //   }
+  //   pCenter = pCenter / (stars.length - 1);
+  //   return (pCenter - createVector(this.pos.x, this.pos.y)) / 100;
+  // }
 
-  cohesion(stars) {
-    let pCenter;
-    for (let i = 0; i < stars.length; i++) {
-      if (this != stars[i]) {
-        pCenter += createVector(stars[i].pos.x, stars[i].pos.y);
-      }
-    }
-    pCenter = pCenter / (stars.length - 1);
-    return (pCenter - createVector(this.pos.x, this.pos.y)) / 100;
-  }
+  // seperation(stars, d) {
+  //   let pCenter = createVector(0, 0);
+  //   for (let i = 0; i < stars.length; i++) {
+  //     if (this != stars[i]) {
+  //       if (dist(stars[i].pos.x, stars[i].pos.y, this.pos.x, this.pos.y) < d)
+  //         pCenter =
+  //           pcenter -
+  //           (createVector(stars[i].pos.x, stars[i].pos.y) -
+  //             createVector(this.pos.x, this.pos.y));
+  //     }
+  //   }
+  //   return pCenter;
+  // }
 
-  seperation(stars, d) {
-    let pCenter = createVector(0, 0);
-    for (let i = 0; i < stars.length; i++) {
-      if (this != stars[i]) {
-        if (dist(stars[i].pos.x, stars[i].pos.y, this.pos.x, this.pos.y) < d)
-          pCenter =
-            pcenter -
-            (createVector(stars[i].pos.x, stars[i].pos.y) -
-              createVector(this.pos.x, this.pos.y));
-      }
-    }
-    return pCenter;
-  }
-
-  alignment(stars, chgVelocity) {
-    let pVelocity;
-    for (let i = 0; i < stars.length; i++) {
-      if (this != stars[i]) {
-        pVelocity += G.velocity;
-      }
-    }
-    pVelocity = pVelocity / (stars.length - 1);
-    return (pVelocity - G.velocity) / chgVelocity;
-  }
-
-  isClicked() {
-    return dist(mouseX, mouseY, this.pos.x, this.pos.y) < this.radius;
-  }
+  // alignment(stars, chgVelocity) {
+  //   let pVelocity;
+  //   for (let i = 0; i < stars.length; i++) {
+  //     if (this != stars[i]) {
+  //       pVelocity += G.velocity;
+  //     }
+  //   }
+  //   pVelocity = pVelocity / (stars.length - 1);
+  //   return (pVelocity - G.velocity) / chgVelocity;
+  // }
 
   handleClick() {
-    if (this.isClicked()) {
+    if (this.mouseOver()) {
+      this.isClicked = true;
       // Create and show the modal
-      let modal = new Modal(this);
-      modal.show();
+      modal = new Modal(this);
+      console.log("a modal was created!");
+      modal.toggle();
+    } else {
+      this.isClicked;
     }
   }
 
@@ -247,7 +296,7 @@ class Star {
 
   update() {
     this.movement();
-    this.twinkle();
+    //this.twinkle();
   }
 
   show() {
@@ -272,24 +321,17 @@ class Star {
 
 // Loop through all stars and check if any are clicked
 function mouseClicked() {
+  let starClicked = false;
   for (let i = 0; i < stars.length; i++) {
-    stars[i].handleClick();
-  }
-}
-
-function mouseMoved() {
-  for (let i = 0; i < stars.length; i++) {
-    if (stars[i].isInside()) {
-      stars[i].engorge();
-      for (let j = 0; j < stars[i].constellation.length; j++) {
-        stars[i].constellation[j].engorge();
-      }
-    } else if (stars[i].isOutside() && stars[i].radius > 10) {
-      stars[i].deflate();
-      for (let j = 0; j < stars[i].constellation.length; j++) {
-        stars[i].constellation[j].deflate();
-      }
+    if (stars[i].mouseOver()) {
+      stars[i].handleClick();
+      starClicked = true;
     }
+  }
+  // If a star is not clicked, hide the currently active modal
+  if (!starClicked && modal) {
+    modal.hide();
+    modal = null;
   }
 }
 
@@ -298,21 +340,85 @@ class Modal {
   constructor(star) {
     this.belong = star.pos.z;
     this.starRadius = star.radius;
+    this.isVisible = false;
+    this.title = "Star Details";
+    this.description =
+      "This is a star with radius " +
+      this.starRadius +
+      " and z-position " +
+      this.belong;
+    this.bulletPoints = ["Point 1", "Point 2", "Point 3"]; // Replace with actual properties
+
+    // Define the size and position of the modal
+    this.width = 800;
+    this.height = 500;
+    this.x = (windowWidth - this.width) / 2;
+    this.y = (windowHeight - this.height) / 2;
+
+    // Define the size and position of the close button
+    this.closeButtonSize = 20;
+    this.closeButtonText = "X";
+    this.closeButtonX = this.x + this.width - this.closeButtonSize;
+    this.closeButtonY = this.y;
+    this.color = star.color;
   }
 
   show() {
-    noStroke();
-    square(50, 75, 20);
-    fill(color(255, 167, 9)); // Example fill color (red)
-    console.log(
-      "You created a modal with the radius" +
-        this.starRadius +
-        " and " +
-        this.belong
-    );
+    if (this.isVisible) {
+      noStroke();
+      fill(color(this.color)); // Background color
+
+      // Draw the modal
+      rect(this.x, this.y, this.width, this.height);
+
+      // Draw the title
+      fill(color(0, 0, 0)); // Text color
+      text(this.title, this.x + 10, this.y + 20);
+
+      // Draw the description
+      text(this.description, this.x + 10, this.y + 40);
+
+      // Draw the bullet points
+      for (let i = 0; i < this.bulletPoints.length; i++) {
+        text("- " + this.bulletPoints[i], this.x + 10, this.y + 70 + i * 20);
+      }
+      let iconSize = 50;
+      let iconMargin = 10;
+      let iconY = this.y + 100;
+      for (let i = 0; i < 4; i++) {
+        let iconX = this.x + 10 + i * (iconSize + iconMargin);
+        noFill();
+        stroke(0);
+        rect(iconX, iconY, iconSize, iconSize);
+      }
+
+      fill(color(255, 0, 0)); // Close button color
+      rect(
+        this.closeButtonX,
+        this.closeButtonY,
+        this.closeButtonSize,
+        this.closeButtonSize
+      );
+    }
   }
 
   hide() {
-    // You can add logic here to hide the modal
+    this.isVisible = false;
+  }
+
+  toggle() {
+    this.isVisible = !this.isVisible;
+  }
+
+  clicked(x, y) {
+    // Check if the close button was clicked
+    if (
+      x > this.closeButtonX &&
+      x < this.closeButtonX + this.closeButtonSize &&
+      y > this.closeButtonY &&
+      y < this.closeButtonY + this.closeButtonSize
+    ) {
+      this.hide();
+    }
   }
 }
